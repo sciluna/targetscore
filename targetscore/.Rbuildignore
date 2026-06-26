@@ -5,3 +5,5 @@
 ^Meta$
 ^ignore_rsconnect.R$
 ^LICENSE\.md$
+^\.positai$
+^\.claude$

@@ -54,6 +54,15 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
       colnames(proteomic_responses)
     )
   )
+  ##This will be the self-portion of the target score
+  tsd_self<- matrix(0,
+    nrow = n_dose, 
+    ncol = n_prot,
+    dimnames = list(
+      rownames(proteomic_responses),
+      colnames(proteomic_responses)
+    )
+  )
   
   ## This will be the pathway component for each targetscore
   tsp <- array(0:0,
@@ -64,6 +73,14 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
       colnames(proteomic_responses)
     )
   )
+  ## This will be the pathway component for each targetscore summed across neighbors
+  tsd_pathway<- array(0:0,
+    dim = c(n_dose, n_prot),
+    dimnames = list(
+      rownames(proteomic_responses),
+      colnames(proteomic_responses)
+    )
+  )
   
   ## This will be the final targetscore summed over multiple doses; always 1 row
   ts <- matrix(0,
@@ -71,6 +88,22 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
     nrow = 1,
     dimnames = list("targetScore", colnames(proteomic_responses))
   )
+  
+  ## This will be the final targetscore self portion summed over multiple doses; always 1 row
+  ts_self <- matrix(0,
+   ncol = n_prot, 
+   nrow = 1,
+   dimnames = list("targetScore", colnames(proteomic_responses))
+  )
+  
+  ## This will be the final targetscore pathway portion summed over multiple doses; always 1 row
+  ts_pathway <- matrix(0,
+    ncol = n_prot, 
+    nrow = 1,
+    dimnames = list("targetScore", colnames(proteomic_responses))
+  )
+  
+  
 
   edges_used <- 0
   
@@ -110,7 +143,8 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
   for (i in 1:n_dose) {
     for (j in 1:n_prot) {
       tsd[i, j] <- fs[j, 2] * (proteomic_responses[i, j] + sum(tsp[i, 1:n_prot, j]))
-      
+      tsd_pathway[i, j] <- sum(tsp[i, 1:n_prot, j])
+      tsd_self[i, j] <- proteomic_responses[i, j]
       if(verbose) {
         fs_tmp <- fs[j, 2]
         self_tmp <- proteomic_responses[i, j]
@@ -123,8 +157,10 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
   }
 
   ts <- colSums(tsd)
+  ts_self<- colSums(tsd_self)
+  ts_pathway <- colSums(tsd_pathway)
   # colnames(ts) <- colnames(proteomic_responses) rownames(ts) <- rownames(proteomic_responses)
   
-  results <- list(wk = wk, wks = wks, ts = ts, tsd = tsd, debug=debug)
+  results <- list(wk = wk, wks = wks, ts = ts, tsd = tsd, ts_self = ts_self, ts_pathway = ts_pathway, debug=debug)
   return(results)
 }

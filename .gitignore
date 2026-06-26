@@ -21,3 +21,6 @@ zeptosensPkg/inst/shiny/rsconnect
 ignore_rsconnect.R
 targetscore.Rcheck
 targetscore_0.99.15.tar.gz
+.positai
+.DS_Store
+
