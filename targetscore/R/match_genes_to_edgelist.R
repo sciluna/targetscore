@@ -74,64 +74,67 @@ match_genes_to_edgelist <- function(genes1, genes2 = NULL, annot_edgelist, antib
 
   # genes1x <- genes1[annot_edgelist0[, 1] %in% genes1]
   # genes1x <- genes1x[!is.na(genes1x)]
-
-  tmp <- paste0(annot_edgelist0[, 1], ":", annot_edgelist0[, 2])
-  if (any(duplicated(tmp))) {
-    stop("ERROR: Multiple shortest paths found. Check network.")
-  }
-
-  genes1_df <- data.frame(
-    PARTICIPANT_A = as.vector(genes1),
-    PARTICIPANT_A_NAME = names(genes1),
-    stringsAsFactors = FALSE
-  )
-  genes2_df <- data.frame(
-    PARTICIPANT_B = as.vector(genes2),
-    PARTICIPANT_B_NAME = names(genes2),
-    stringsAsFactors = FALSE
-  )
-
-  cur_annot_edgelist <- annot_edgelist0
-  cur_annot_edgelist <- merge(cur_annot_edgelist, genes1_df, by = "PARTICIPANT_A", all.y = TRUE)
-  cur_annot_edgelist <- merge(cur_annot_edgelist, genes2_df, by = "PARTICIPANT_B", all.y = TRUE)
-  idx <- complete.cases(cur_annot_edgelist)
-  cur_annot_edgelist <- cur_annot_edgelist[idx, ]
-
-  if (verbose) {
-    message("START MATCH GENES: ", as.character(Sys.time()), "\n")
-    message("NROW: ", nrow(cur_annot_edgelist), "\n")
-  }
-
-  # NOTE: Lack of interactions between nodes may trigger match_genes_to_edgelist 
-  #   errors generating data.frame when cur_annot_edgelist has a nrow = 0
-  for (i in 1:nrow(cur_annot_edgelist)) {
-    # i <- 1
-    annot <- NA
-    if (use_annot) {
-      annot <- cur_annot_edgelist[i, "DISTANCE"]
+  if (length(tmp_idx)!=0){
+    
+    
+    tmp <- paste0(annot_edgelist0[, 1], ":", annot_edgelist0[, 2])
+    if (any(duplicated(tmp))) {
+      stop("ERROR: Multiple shortest paths found. Check network.")
     }
-
-    # Get indicies based off antibody names rather than the gene names
-    gene1_ab_idx <- which(antibody_vec == cur_annot_edgelist[i, "PARTICIPANT_A_NAME"])
-    gene2_ab_idx <- which(antibody_vec == cur_annot_edgelist[i, "PARTICIPANT_B_NAME"])
-
-    gene1_name <- cur_annot_edgelist[i, "PARTICIPANT_A"]
-    gene2_name <- cur_annot_edgelist[i, "PARTICIPANT_B"]
-    gene1_ab <- cur_annot_edgelist[i, "PARTICIPANT_A_NAME"]
-    gene2_ab <- cur_annot_edgelist[i, "PARTICIPANT_B_NAME"]
-
-    tmp_results <- data.frame(
-      gene1 = gene1_ab_idx,
-      gene2 = gene2_ab_idx,
-      annot = annot,
-      gene1Name = gene1_name,
-      gene2Name = gene2_name,
-      gene1Ab = gene1_ab,
-      gene2Ab = gene2_ab,
+  
+    genes1_df <- data.frame(
+      PARTICIPANT_A = as.vector(genes1),
+      PARTICIPANT_A_NAME = names(genes1),
       stringsAsFactors = FALSE
     )
-
-    results <- rbind(results, tmp_results)
+    genes2_df <- data.frame(
+      PARTICIPANT_B = as.vector(genes2),
+      PARTICIPANT_B_NAME = names(genes2),
+      stringsAsFactors = FALSE
+    )
+  
+    cur_annot_edgelist <- annot_edgelist0
+    cur_annot_edgelist <- merge(cur_annot_edgelist, genes1_df, by = "PARTICIPANT_A", all.y = TRUE)
+    cur_annot_edgelist <- merge(cur_annot_edgelist, genes2_df, by = "PARTICIPANT_B", all.y = TRUE)
+    idx <- complete.cases(cur_annot_edgelist)
+    cur_annot_edgelist <- cur_annot_edgelist[idx, ]
+  
+    if (verbose) {
+      message("START MATCH GENES: ", as.character(Sys.time()), "\n")
+      message("NROW: ", nrow(cur_annot_edgelist), "\n")
+    }
+  
+    # NOTE: Lack of interactions between nodes may trigger match_genes_to_edgelist 
+    #   errors generating data.frame when cur_annot_edgelist has a nrow = 0
+    for (i in 1:nrow(cur_annot_edgelist)) {
+      # i <- 1
+      annot <- NA
+      if (use_annot) {
+        annot <- cur_annot_edgelist[i, "DISTANCE"]
+      }
+  
+      # Get indicies based off antibody names rather than the gene names
+      gene1_ab_idx <- which(antibody_vec == cur_annot_edgelist[i, "PARTICIPANT_A_NAME"])
+      gene2_ab_idx <- which(antibody_vec == cur_annot_edgelist[i, "PARTICIPANT_B_NAME"])
+  
+      gene1_name <- cur_annot_edgelist[i, "PARTICIPANT_A"]
+      gene2_name <- cur_annot_edgelist[i, "PARTICIPANT_B"]
+      gene1_ab <- cur_annot_edgelist[i, "PARTICIPANT_A_NAME"]
+      gene2_ab <- cur_annot_edgelist[i, "PARTICIPANT_B_NAME"]
+  
+      tmp_results <- data.frame(
+        gene1 = gene1_ab_idx,
+        gene2 = gene2_ab_idx,
+        annot = annot,
+        gene1Name = gene1_name,
+        gene2Name = gene2_name,
+        gene1Ab = gene1_ab,
+        gene2Ab = gene2_ab,
+        stringsAsFactors = FALSE
+      )
+  
+      results <- rbind(results, tmp_results)
+    }
   }
 
   return(results)
