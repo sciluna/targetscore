@@ -20,6 +20,9 @@
 #' @param dist_file A distance file an edgelist with a third column which is the network distance
 #'   between the genes in the interaction
 #' @param ts_pathway_scale a scaling factor for the pathway component in the TargetScore
+#' 
+#' @param neighbor_direction a string variable representing whether neighborhood interactions should
+#' be taken from upstream (default) or downstream neighbor responses, or bidirectionally
 #'
 #' @return a list is returned with the following entries:
 #' {ts}{TargetScore values summed over individual drug doses}
@@ -35,7 +38,7 @@
 #' @concept targetscore
 #' @export
 calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteomic_responses, fs_dat,
-                              verbose = TRUE, ts_pathway_scale = 1, dist_file = NULL) {
+                              verbose = TRUE, ts_pathway_scale = 1, dist_file = NULL, neighbor_direction = "upstream") {
   if(verbose) {
     tmp <- paste(capture.output(head(fs_dat, 3)), collapse = "\n")
     message("MSG: Functional score data (head):\n", tmp, "\n")
@@ -107,6 +110,7 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
 
   edges_used <- 0
   
+  #tsp is organized so that dim 2 is upstream node and dim 3 is downstream node
   for (i in 1:n_dose) {
     # downstream (target)
     for (j in 1:nrow(edgelist)) {
@@ -140,10 +144,22 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
     debug <- NULL
   }
   
+  #Neighbor interactions from sum(tsp[i, 1:n_prot, j]) gives neighbor score from all upstream nodes
+  #sum(tsp[i, j, 1:n_prot]) gives neighbor score from all downstream nodes
+  
   for (i in 1:n_dose) {
     for (j in 1:n_prot) {
-      tsd[i, j] <- fs[j, 2] * (proteomic_responses[i, j] + sum(tsp[i, 1:n_prot, j]))
-      tsd_pathway[i, j] <- sum(tsp[i, 1:n_prot, j])
+      if (neighbor_direction == "upstream"){
+        pathway_score<-sum(tsp[i, 1:n_prot, j])
+      }else if (neighbor_direction == "downstream"){
+        pathway_score<-sum(tsp[i, j, 1:n_prot])
+
+      }else if(neighbor_direction == "bidirectional"){
+        pathway_score<-sum(tsp[i, 1:n_prot, j])+sum(tsp[i, j, 1:n_prot])
+
+      }
+      tsd[i, j] <- fs[j, 2] * (proteomic_responses[i, j] + pathway_score)
+      tsd_pathway[i, j] <- pathway_score
       tsd_self[i, j] <- proteomic_responses[i, j]
       if(verbose) {
         fs_tmp <- fs[j, 2]

@@ -19,6 +19,9 @@
 #' @param fs_dat a dataset with the functional score data.First coloumn as the protein name and second
 #' column as the functional score. Can be inferred from get_fs_value or be User defined and curated.
 #' 
+#' @param neighbor_direction a string variable representing whether neighborhood interactions should
+#' be taken from upstream (default) or downstream neighbor responses, or bidirectionally
+#' 
 #' @return a list is returned with the following entries:
 #' {ts}{TargetScore values summed over individual drug doses}
 #' {tsd}{TargetScore values for individual drug doses}
@@ -90,7 +93,7 @@
 #' @concept targetscore
 #' @export
 get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteomic_responses,
-                             n_perm, verbose = TRUE, ts_pathway_scale = 1, fs_dat) {
+                             n_perm, verbose = TRUE, ts_pathway_scale = 1, fs_dat, neighbor_direction = "upstream") {
 
   # CALCULATE TARGET SCORE ----
   results <- calc_target_score(
@@ -103,7 +106,9 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
     proteomic_responses = proteomic_responses,
     verbose = verbose,
     ts_pathway_scale = ts_pathway_scale,
-    fs_dat = fs_dat
+    fs_dat = fs_dat,
+    neighbor_direction = neighbor_direction
+    
   )
   
   ts <- results$ts
@@ -146,7 +151,8 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
       proteomic_responses = rand_proteomic_responses,
       verbose = verbose,
       ts_pathway_scale = ts_pathway_scale,
-      fs_dat = fs_dat
+      fs_dat = fs_dat,
+      neighbor_direction = neighbor_direction
     )$ts
 
     # rand_ts[,k] <- as.matrix(rants) print('resi') print(resi$ts) rand_ts[,k]
