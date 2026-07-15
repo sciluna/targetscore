@@ -53,12 +53,18 @@ predict_dat_network <- function(data, cut_off = 0.1, n_prot, proteomic_responses
   bic <- rho
   g_result <- NULL
   p_off_d <- NULL
-  for (i in seq_len(length(rho))) {
-    g_result <- glasso::glasso(covmatrix, rho[i], nobs = nrow(covmatrix))
-    p_off_d <- sum(g_result$wi != 0 & col(covmatrix) < row(covmatrix))
-    bic[i] <- -2 * (g_result$loglik) + p_off_d * log(nrow(data))
+  #Only optimize if rho is a vector
+  if (length(rho)>1){
+    
+    for (i in seq_len(length(rho))) {
+      g_result <- glasso::glasso(covmatrix, rho[i], nobs = nrow(covmatrix))
+      p_off_d <- sum(g_result$wi != 0 & col(covmatrix) < row(covmatrix))
+      bic[i] <- -2 * (g_result$loglik) + p_off_d * log(nrow(data))
+    }
+    optimal_rho <- rho[which.min(bic)]
+  }else{
+    optimal_rho<-rho
   }
-  optimal_rho <- rho[which.min(bic)]
 
   # Estimated inverse covariance (precision matrix)
   glasso_result <- glasso::glasso(covmatrix, rho = optimal_rho, nobs = nrow(covmatrix))
