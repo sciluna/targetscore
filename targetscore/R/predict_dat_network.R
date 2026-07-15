@@ -108,6 +108,7 @@ predict_dat_network <- function(data, cut_off = 0.1, n_prot, proteomic_responses
   # Calculate various properties for network, including wk and dist_ind
   network_inferred <- targetscore::predict_dat_network_get_properties(
     wk = t_net, 
+    edgelist = edgelist,
     n_prot = n_prot,
     proteomic_responses = proteomic_responses,
   )

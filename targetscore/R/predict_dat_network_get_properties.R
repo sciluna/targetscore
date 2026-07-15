@@ -39,7 +39,7 @@
 #'
 #' @concept targetscore
 #' @export
-predict_dat_network_get_properties <- function(wk, n_prot, proteomic_responses, 
+predict_dat_network_get_properties <- function(wk, edgelist, n_prot, proteomic_responses, 
                                                dist_file = NULL, 
                                                verbose = FALSE) {
   if (n_prot != ncol(proteomic_responses)) {
@@ -55,25 +55,17 @@ predict_dat_network_get_properties <- function(wk, n_prot, proteomic_responses,
   protein_net[index, index] <- network
 
   wk <- protein_net
-  # dist_ind(upstream,downstream)
-  dist_ind <- matrix(Inf,
-    ncol = n_prot, nrow = n_prot,
-    dimnames = list(colnames(wk), colnames(wk))
-  )
-  
-  for (i in 1:n_prot) {
-    for (j in 1:n_prot) {
-      if (wk[i, j] != 0) {
-        dist_ind[i, j] <- 1
-      } else {
-        dist_ind[i, j] <- Inf
-      }
-    }
+  wk[]<-0
+  for (edge in 1:nrow(network$edgelist)){
+    wk[network$edgelist$source_node[edge], network$edgelist$target_node[edge]] = network$edgelist$edges_value[edge]
   }
-
+  dist_ind <- matrix(Inf,
+                     ncol = n_prot, nrow = n_prot,
+                     dimnames = list(colnames(wk), colnames(wk))
+  )
+  dist_ind[wk!=0]=1
   wk <- wk / max(abs(wk))
   wks <- wk
-
   inter <- (which(wk != 0, arr.ind = TRUE))
   
   if(verbose) {
