@@ -121,9 +121,16 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
 
   # Random TS for each node over n permutations
   rand_ts <- matrix(NA, nrow = n_prot, ncol = n_perm)
+  rand_ts_self <- matrix(NA, nrow = n_prot, ncol = n_perm)
+  rand_ts_pathway <- matrix(NA, nrow = n_prot, ncol = n_perm)
+  
+  
 
   # p value for a given target score computed over the distribution from randTS
   pts <- matrix(NA, ncol = 1, nrow = n_prot)
+  pts_self <- matrix(NA, ncol = 1, nrow = n_prot)
+  pts_pathway <- matrix(NA, ncol = 1, nrow = n_prot)
+  
   
   ## This will be the final targetscore summed over multiple doses; always 1 row
   #ts <- matrix(NA, ncol = n_prot, nrow = 1)
@@ -141,7 +148,7 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
     # (proteomic_responses[,j])
     for (i in 1:nrow(rand_proteomic_responses)) rand_proteomic_responses[i, ] <- sample(proteomic_responses[i, ])
 
-    rand_ts[, k] <- calc_target_score(
+    perm_ts<- calc_target_score(
       wk = wk,
       wks = wks,
       dist_ind = dist_ind,
@@ -153,23 +160,39 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
       ts_pathway_scale = ts_pathway_scale,
       fs_dat = fs_dat,
       neighbor_direction = neighbor_direction
-    )$ts
+    )
+    rand_ts[, k] <- perm_ts$ts
+    rand_ts_self[, k] <- perm_ts$ts_self
+    rand_ts_pathway[, k] <- perm_ts$ts_pathway
+    
 
     # rand_ts[,k] <- as.matrix(rants) print('resi') print(resi$ts) rand_ts[,k]
   }
 
   # NaN are created because the ts, mean, and sd are 0
   for (i in 1:n_prot) {
-    mean <- mean(rand_ts[i, 1:n_perm])
-    stdev <- sd(rand_ts[i, 1:n_perm])
-    zval <- (ts[i] - mean) / (stdev)
-    pts[i] <- 2 * pnorm(-abs(zval)) # pnorm(ts[i], mean = mean(rand_ts[i, 1:n_perm]), sd = sd(rand_ts[i, 1:n_perm]))
+    # mean <- mean(rand_ts[i, 1:n_perm])
+    # stdev <- sd(rand_ts[i, 1:n_perm])
+    # zval <- (ts[i] - mean) / (stdev)
+    # pts[i] <- 2 * pnorm(-abs(zval)) # pnorm(ts[i], mean = mean(rand_ts[i, 1:n_perm]), sd = sd(rand_ts[i, 1:n_perm]))
 
     # if (verbose) {
     #   tmp <- pts[i]
     #   message("MSG: Current TS p-value: ", tmp, "\n")
     # }
+    
+    mean_self <- mean(rand_ts_self[i, 1:n_perm])
+    stdev_self <- sd(rand_ts_self[i, 1:n_perm])
+    zval_self <- (ts_self[i] - mean_self) / (stdev_self)
+    pts_self[i] <- 2 * pnorm(-abs(zval_self))
+    
+    mean_pathway <- mean(rand_ts_pathway[i, 1:n_perm])
+    stdev_pathway <- sd(rand_ts_pathway[i, 1:n_perm])
+    zval_pathway <- (ts_pathway[i] - mean_pathway) / (stdev_pathway)
+    pts_pathway[i] <- 2 * pnorm(-abs(zval_pathway))
   }
+  
+  pts<-pts_self*pts_pathway
   
   if (verbose) {
     tmp <- paste(head(pts), collapse=", ")
@@ -195,6 +218,12 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
   
   pts <- t(pts)
   colnames(pts) <- colnames(proteomic_responses)
+  
+  pts_self <- t(pts_self)
+  colnames(pts_self) <- colnames(proteomic_responses)
+  
+  pts_pathway <- t(pts_pathway)
+  colnames(pts_pathway) <- colnames(proteomic_responses)
   
   ts <- data.frame(as.list(ts))
   colnames(ts) <- colnames(proteomic_responses)
@@ -227,7 +256,7 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
   # RETURN RESULTS ----
   results <- list(wk=wk, wks=wks, 
                   ts=ts, tsd=tsd, rand_ts=rand_ts,
-                  pts=pts, q=q, ts_sig_df=ts_sig_df,
+                  pts=pts, pts_self = pts_self, pts_pathway = pts_pathway, q=q, ts_sig_df=ts_sig_df,
                   ts_self = ts_self, ts_pathway = ts_pathway,
                   debug_ts=debug_ts)
   
