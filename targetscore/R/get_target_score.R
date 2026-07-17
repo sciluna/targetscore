@@ -189,7 +189,7 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
     mean_pathway <- mean(rand_ts_pathway[i, 1:n_perm])
     stdev_pathway <- sd(rand_ts_pathway[i, 1:n_perm])
     zval_pathway <- (ts_pathway[i] - mean_pathway) / (stdev_pathway)
-    pts_pathway[i] <- 2 * pnorm(-abs(zval_pathway))
+    pts_pathway[i] <- ifelse(!is.na(2 * pnorm(-abs(zval_pathway))),2 * pnorm(-abs(zval_pathway)),1)
   }
   
   pts<-pts_self*pts_pathway
