@@ -56,8 +56,8 @@ predict_dat_network_get_properties <- function(wk, edgelist, n_prot, proteomic_r
 
   wk <- protein_net
   wk[]<-0
-  for (edge in 1:nrow(network$edgelist)){
-    wk[network$edgelist$source_node[edge], network$edgelist$target_node[edge]] = network$edgelist$edges_value[edge]
+  for (edge in 1:nrow(edgelist)){
+    wk[edgelist$source_node[edge], edgelist$target_node[edge]] = edgelist$edges_value[edge]
   }
   dist_ind <- matrix(Inf,
                      ncol = n_prot, nrow = n_prot,
