@@ -93,7 +93,7 @@
 #' @concept targetscore
 #' @export
 get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteomic_responses,
-                             n_perm, verbose = TRUE, ts_pathway_scale = 1, fs_dat, neighbor_direction = "upstream") {
+                             n_perm, verbose = TRUE, ts_pathway_scale = 1, fs_dat, neighbor_direction = "upstream", p_value_calculation = "together") {
 
   # CALCULATE TARGET SCORE ----
   results <- calc_target_score(
@@ -127,7 +127,7 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
   
 
   # p value for a given target score computed over the distribution from randTS
-  pts <- matrix(NA, ncol = 1, nrow = n_prot)
+  pts_together <- matrix(NA, ncol = 1, nrow = n_prot)
   pts_self <- matrix(NA, ncol = 1, nrow = n_prot)
   pts_pathway <- matrix(NA, ncol = 1, nrow = n_prot)
   
@@ -171,10 +171,10 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
 
   # NaN are created because the ts, mean, and sd are 0
   for (i in 1:n_prot) {
-    # mean <- mean(rand_ts[i, 1:n_perm])
-    # stdev <- sd(rand_ts[i, 1:n_perm])
-    # zval <- (ts[i] - mean) / (stdev)
-    # pts[i] <- 2 * pnorm(-abs(zval)) # pnorm(ts[i], mean = mean(rand_ts[i, 1:n_perm]), sd = sd(rand_ts[i, 1:n_perm]))
+    mean <- mean(rand_ts[i, 1:n_perm])
+    stdev <- sd(rand_ts[i, 1:n_perm])
+    zval <- (ts[i] - mean) / (stdev)
+    pts_together[i] <- 2 * pnorm(-abs(zval)) # pnorm(ts[i], mean = mean(rand_ts[i, 1:n_perm]), sd = sd(rand_ts[i, 1:n_perm]))
 
     # if (verbose) {
     #   tmp <- pts[i]
@@ -192,7 +192,14 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
     pts_pathway[i] <- ifelse(!is.na(2 * pnorm(-abs(zval_pathway))),2 * pnorm(-abs(zval_pathway)),1)
   }
   
-  pts<-pts_self*pts_pathway
+  if (p_value_calculation == "together"){
+    pts<-pts_together
+  }else if(p_value_calculation == "separate"){
+    pts<-pts_self*pts_pathway
+    
+  }else{
+    stop("ERROR: 'p_value_calculation' must be 'separate' or 'together'")
+  }
   
   if (verbose) {
     tmp <- paste(head(pts), collapse=", ")
