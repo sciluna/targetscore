@@ -142,7 +142,7 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
     sqrt(i)
   }
   
-  acomb <- function(...) abind(..., along = 3)
+  acomb <- function(...) abind::abind(..., along = 3)
   rand_ts_perms<-foreach(k = seq_len(n_perm), .combine = 'acomb', .multicombine = TRUE) %dopar% {
   # CREATE Q-VALUES ----
     #3 dimensions for ts total, ts_self, and ts_pathway respectively
