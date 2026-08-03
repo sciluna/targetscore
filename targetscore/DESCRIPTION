@@ -1,7 +1,7 @@
 Package: targetscore
 Type: Package
 Title: Targeting Adaptation to Cancer Treatment by Drug Combination Prediction
-Version: 0.99.43
+Version: 0.99.44
 Date: 2024-03-18
 Author: Augustin Luna, Anil Korkut
 Maintainer: Augustin Luna <lunaa@cbio.mskcc.org>
@@ -14,7 +14,8 @@ Imports:
     ggrepel,
     foreach,
     doParallel,
-    abind
+    abind,
+    parallely
 Depends:
     R (>= 3.5.0)
 Suggests:

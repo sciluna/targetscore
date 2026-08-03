@@ -135,7 +135,7 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
   ## This will be the final targetscore summed over multiple doses; always 1 row
   #ts <- matrix(NA, ncol = n_prot, nrow = 1)
   
-  cores <- parallel::detectCores()
+  cores <- min(parallel::detectCores(), parallelly::freeConnections())
   cl <- parallel::makeCluster(cores-1)
   doParallel::registerDoParallel(cl)
   results <- foreach::foreach(i = 1:4, .combine = 'c') %dopar% {
