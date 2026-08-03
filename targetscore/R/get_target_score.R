@@ -142,7 +142,7 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
     sqrt(i)
   }
   
-  message("Running random pertuations on ", cores-1, " cores \n")
+  message("Running random permutations on ", cores-1, " cores \n")
   
   acomb <- function(...) abind::abind(..., along = 3)
   rand_ts_perms<-foreach(k = seq_len(n_perm), .combine = 'acomb', .multicombine = TRUE) %dopar% {
