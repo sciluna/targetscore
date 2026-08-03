@@ -119,10 +119,10 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
   ts_pathway <- results$ts_pathway
   debug_ts <- results$debug
 
-  # Random TS for each node over n permutations
-  rand_ts <- matrix(NA, nrow = n_prot, ncol = n_perm)
-  rand_ts_self <- matrix(NA, nrow = n_prot, ncol = n_perm)
-  rand_ts_pathway <- matrix(NA, nrow = n_prot, ncol = n_perm)
+  # # Random TS for each node over n permutations
+  # #3 dimensions for ts total, ts_self, and ts_pathway respectively
+  # rand_ts <- array(NA,  dim = c(n_prot, n_perm, 3))
+  # 
   
   
 
@@ -134,9 +134,19 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
   
   ## This will be the final targetscore summed over multiple doses; always 1 row
   #ts <- matrix(NA, ncol = n_prot, nrow = 1)
-
+  
+  cores <- parallel::detectCores()
+  cl <- parallel::makeCluster(cores-1)
+  doParallel::registerDoParallel(cl)
+  results <- foreach::foreach(i = 1:4, .combine = 'c') %dopar% {
+    sqrt(i)
+  }
+  
+  acomb <- function(...) abind(..., along = 3)
+  rand_ts_perms<-foreach(k = seq_len(n_perm), .combine = 'acomb', .multicombine = TRUE) %dopar% {
   # CREATE Q-VALUES ----
-  for (k in seq_len(n_perm)) {
+    #3 dimensions for ts total, ts_self, and ts_pathway respectively
+    this_rand_ts<-array(dim = c(3, n_prot))
     #        if(verbose) {
     message("MSG: Permutation Iteration: ", k, "\n")
     #        }
@@ -161,13 +171,19 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
       fs_dat = fs_dat,
       neighbor_direction = neighbor_direction
     )
-    rand_ts[, k] <- perm_ts$ts
-    rand_ts_self[, k] <- perm_ts$ts_self
-    rand_ts_pathway[, k] <- perm_ts$ts_pathway
+    this_rand_ts[1, ] <- perm_ts$ts
+    this_rand_ts[2, ] <- perm_ts$ts_self
+    this_rand_ts[3, ] <- perm_ts$ts_pathway
     
 
     # rand_ts[,k] <- as.matrix(rants) print('resi') print(resi$ts) rand_ts[,k]
   }
+  
+  parallel::stopCluster(cl)
+  rand_ts<-rand_ts_perms[1,,]
+  rand_ts_self<-rand_ts_perms[2,,]
+  rand_ts_pathway<-rand_ts_perms[3,,]
+  
 
   # NaN are created because the ts, mean, and sd are 0
   for (i in 1:n_prot) {
