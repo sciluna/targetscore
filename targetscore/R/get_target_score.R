@@ -175,6 +175,7 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
     this_rand_ts[2, ] <- perm_ts$ts_self
     this_rand_ts[3, ] <- perm_ts$ts_pathway
     
+    this_rand_ts
 
     # rand_ts[,k] <- as.matrix(rants) print('resi') print(resi$ts) rand_ts[,k]
   }
