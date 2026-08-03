@@ -93,7 +93,8 @@
 #' @concept targetscore
 #' @export
 get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteomic_responses,
-                             n_perm, verbose = TRUE, ts_pathway_scale = 1, fs_dat, neighbor_direction = "upstream", p_value_calculation = "together") {
+                             n_perm, verbose = TRUE, ts_pathway_scale = 1, fs_dat, neighbor_direction = "upstream", p_value_calculation = "together",
+                             max_threads = NA) {
 
   # CALCULATE TARGET SCORE ----
   results <- calc_target_score(
@@ -134,8 +135,10 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
   
   ## This will be the final targetscore summed over multiple doses; always 1 row
   #ts <- matrix(NA, ncol = n_prot, nrow = 1)
-  
-  cores <- min(parallel::detectCores(), parallelly::freeConnections())
+  if (is.na(max_threads)){
+    max_threads<-parallel::detectCores()
+  }
+  cores <- min(parallel::detectCores(), parallelly::freeConnections(), max_threads)
   cl <- parallel::makeCluster(cores-1)
   doParallel::registerDoParallel(cl)
   results <- foreach::foreach(i = 1:4, .combine = 'c') %dopar% {
