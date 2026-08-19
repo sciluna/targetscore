@@ -38,7 +38,8 @@
 #' @concept targetscore
 #' @export
 calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteomic_responses, fs_dat,
-                              verbose = TRUE, ts_pathway_scale = 1, dist_file = NULL, neighbor_direction = "upstream") {
+                              verbose = TRUE, ts_pathway_scale = 1, dist_file = NULL, neighbor_direction = "upstream",
+                              pathway_magnitude_agnositc = FALSE, neighbor_sign_tolerance = 0) {
   if(verbose) {
     tmp <- paste(capture.output(head(fs_dat, 3)), collapse = "\n")
     message("MSG: Functional score data (head):\n", tmp, "\n")
@@ -121,7 +122,11 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
       # tsp[i,k,j] <- ts_pathway_scale*(2^-(dist_ind[k, j])) * proteomic_responses[i, k] * wk[k, j]
       
       if(node1 %in% colnames(proteomic_responses) & node2 %in% colnames(proteomic_responses)) {
-        tsp[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * proteomic_responses[i, node1] * wk[node1, node2]
+        if (pathway_magnitude_agnositc){
+          tsp[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * proteomic_responses[i, node1] * wk[node1, node2]
+        }else{
+          tsp[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ifelse(abs(x) < neighbor_sign_tolerance, 0, sign(x)) * wk[node1, node2]
+        }
         
         edges_used <- edges_used + 1
       }

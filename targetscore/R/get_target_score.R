@@ -94,8 +94,21 @@
 #' @export
 get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteomic_responses,
                              n_perm, verbose = TRUE, ts_pathway_scale = 1, fs_dat, neighbor_direction = "upstream", p_value_calculation = "together",
-                             max_threads = NA) {
+                             max_threads = NA, normalize_by_reference_variance = FALSE, reference_data = NA, pathway_magnitude_agnositc = FALSE, neighbor_sign_tolerance = 0) {
 
+  if (normalize_by_reference_variance){
+    if (length(setdiff(colnames(proteomic_responses), colnames(reference_data)))==0){
+      reference_data_shared_genes<-reference_data[,colnames(proteomic_responses)]
+      stdev_by_node<-apply(reference_data_shared_genes, 2, sd, na.rm = TRUE)
+      proteomic_responses<-sweep(proteomic_responses, 2, stdev_by_node, FUN = "/")
+      
+    }else{
+      stop("ERROR: reference data does not included all nodes in response data")
+    }
+    
+  }
+  
+  
   # CALCULATE TARGET SCORE ----
   results <- calc_target_score(
     wk = wk,
@@ -108,7 +121,9 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
     verbose = verbose,
     ts_pathway_scale = ts_pathway_scale,
     fs_dat = fs_dat,
-    neighbor_direction = neighbor_direction
+    neighbor_direction = neighbor_direction,
+    pathway_magnitude_agnositc = pathway_magnitude_agnositc,
+    neighbor_sign_tolerance = neighbor_sign_tolerance
     
   )
   
@@ -174,7 +189,9 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
       verbose = verbose,
       ts_pathway_scale = ts_pathway_scale,
       fs_dat = fs_dat,
-      neighbor_direction = neighbor_direction
+      neighbor_direction = neighbor_direction,
+      pathway_magnitude_agnositc = pathway_magnitude_agnositc,
+      neighbor_sign_tolerance = neighbor_sign_tolerance
     )
     this_rand_ts[1, ] <- perm_ts$ts
     this_rand_ts[2, ] <- perm_ts$ts_self
