@@ -123,9 +123,10 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
       
       if(node1 %in% colnames(proteomic_responses) & node2 %in% colnames(proteomic_responses)) {
         if (pathway_magnitude_agnositc){
-          tsp[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * proteomic_responses[i, node1] * wk[node1, node2]
+          tsp[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ifelse(abs(proteomic_responses[i, node1]) < neighbor_sign_tolerance, 0, sign(proteomic_responses[i, node1])) * wk[node1, node2]
         }else{
-          tsp[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ifelse(abs(x) < neighbor_sign_tolerance, 0, sign(x)) * wk[node1, node2]
+          tsp[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * proteomic_responses[i, node1] * wk[node1, node2]
+          
         }
         
         edges_used <- edges_used + 1
