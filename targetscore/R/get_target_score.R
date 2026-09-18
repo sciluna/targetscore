@@ -97,8 +97,8 @@ get_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, proteo
                              max_threads = NA, normalize_by_reference_variance = FALSE, reference_data = NA, pathway_magnitude_agnostic = FALSE, neighbor_sign_tolerance = 0) {
 
   
-  if (!neighbor_direction%in%c("upstream", "downstream")){
-    stop("ERROR:neighbor direction must be a single value of 'upstream' or 'downstream'")
+  if (!neighbor_direction%in%c("upstream", "downstream", "both")){
+    stop("ERROR:neighbor direction must be a single value of 'upstream', 'downstream', or 'both'")
   }
   if (normalize_by_reference_variance){
     if (length(setdiff(colnames(proteomic_responses), colnames(reference_data)))==0){

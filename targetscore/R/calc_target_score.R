@@ -69,7 +69,7 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
   )
   
   ## This will be the pathway component for each targetscore
-  tsp <- array(0:0,
+  tsp_up = tsp_down <- array(0:0,
     dim = c(n_dose, n_prot, n_prot),
     dimnames = list(
       rownames(proteomic_responses),
@@ -124,13 +124,14 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
       if(node1 %in% colnames(proteomic_responses) & node2 %in% colnames(proteomic_responses)) {
         #if upstream, use source node response
         #if downstream, use target node response
-        response_value<-ifelse(neighbor_direction == "upstream",proteomic_responses[i, node1], proteomic_responses[i, node2] )
         if (pathway_magnitude_agnostic){
-          tsp[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ifelse(abs(response_value) < neighbor_sign_tolerance, 0, sign(response_value)) * wk[node1, node2]
-
+          tsp_up[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ifelse(abs(,proteomic_responses[i, node1]) < neighbor_sign_tolerance, 0, sign(response_value)) * wk[node1, node2]
+          tsp_down[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ifelse(abs(,proteomic_responses[i, node2]) < neighbor_sign_tolerance, 0, sign(response_value)) * wk[node1, node2]
+          
         }else{
-          tsp[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * response_value * wk[node1, node2]
-
+          tsp_up[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ,proteomic_responses[i, node1] * wk[node1, node2]
+          tsp_down[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ,proteomic_responses[i, node2] * wk[node1, node2]
+          
         }
         
         edges_used <- edges_used + 1
@@ -160,10 +161,12 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
   for (i in 1:n_dose) {
     for (j in 1:n_prot) {
       if (neighbor_direction == "upstream"){
-        pathway_score<-sum(tsp[i, 1:n_prot, j])
+        pathway_score<-sum(tsp_up[i, 1:n_prot, j])
       }else if (neighbor_direction == "downstream"){
-        pathway_score<-sum(tsp[i, j, 1:n_prot])
+        pathway_score<-sum(tsp_down[i, j, 1:n_prot])
 
+      }else if (neighbor_direction == "both"){
+        pathway_score<-sum(tsp_up[i, 1:n_prot, j])+sum(tsp_down[i, j, 1:n_prot])
       }
       tsd[i, j] <- fs[j, 2] * (proteomic_responses[i, j] + pathway_score)
       tsd_pathway[i, j] <- pathway_score
@@ -171,7 +174,7 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
       if(verbose) {
         fs_tmp <- fs[j, 2]
         self_tmp <- proteomic_responses[i, j]
-        network_tmp <- sum(tsp[i, 1:n_prot, j])
+        network_tmp <- pathway_score
         
         tmp <- data.frame(i=i, j=j, fs=fs_tmp, self=self_tmp, network=network_tmp)
         debug <- rbind(debug, tmp)
