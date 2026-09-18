@@ -130,7 +130,7 @@ calc_target_score <- function(wk, wks, dist_ind, edgelist, n_dose, n_prot, prote
           
         }else{
           tsp_up[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ,proteomic_responses[i, node1] * wk[node1, node2]
-          tsp_down[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * ,proteomic_responses[i, node2] * wk[node1, node2]
+          tsp_down[i, node1, node2] <- ts_pathway_scale * (2^-(dist_ind[node1, node2])) * proteomic_responses[i, node2] * wk[node1, node2]
           
         }
         
